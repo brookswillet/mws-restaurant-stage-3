@@ -1,0 +1,21 @@
+{
+  "name": "Restaurant Reviews",
+  "short_name": "Restaurants",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f3f3f3",
+  "description": "Reviews of New York area restaurants by borough and cuisine.",
+  "dir":"ltf",
+  "lang":"en-US",
+  "prefer_related_applications": false,
+  "orientation":"natural",
+  "scope":"/",
+  "theme_color":"#333",
+  "icons": [{
+    "src": "/img/andre-benz-603256-unsplash_192_192.jpg",
+    "sizes": "192x192",
+    "type": "image/jpg" },{
+    "src": "/img/andre-benz-603256-unsplash_550_550.jpg",
+    "sizes": "550x550",
+    "type": "image/jpg" }]
+}
