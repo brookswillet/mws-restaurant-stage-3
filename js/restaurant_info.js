@@ -1,5 +1,5 @@
 //Register Service Worker - copied from developer.google.com
-if ('serviceWorker' in navigator) {
+/*if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').then(function(registration) {
       // Registration was successful
@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator) {
     });
   });
 }else{console.log('No Service Worker found in navigator');}
-
+*/
 let restaurant, id;
 var map;
 
@@ -33,7 +33,7 @@ fetchRestaurantFromURL = (callback) => {
       if (!restaurant) {
         console.error(error);
         return;
-      }
+      }//else console.log(`Opening ${restaurant.id}`);
       fillRestaurantHTML();
       callback(null, restaurant)
     });
@@ -59,9 +59,10 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   name.innerHTML = restaurant.name;
 
   //Add checkbox for favorite
-  const fav = document.getElementById('is_favorite');
-  if (restaurant.is_favorite) {fav.setAttribute('checked');}
-
+  var fav = document.getElementById('favCheckBox');
+  if (self.restaurant.is_favorite == 'true') {fav.checked = true;}
+  else {fav.checked = false;}
+  console.log(self.restaurant.is_favorite);
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
@@ -69,6 +70,11 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img'
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  if(restaurant.photograph){
+    image.setAttribute('alt', 'Photo of ' + restaurant.name);
+  }else {
+    image.setAttribute('alt', 'No photo yet for ' + restaurant.name);
+  }
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
@@ -110,7 +116,7 @@ fillReviewsHTML = (reviews = self.reviews) => {
   container.appendChild(title);
 
   if (!reviews) {
-    const noReviews = document.createElement('p');
+    const noReviews = document.createElement('li');
     noReviews.innerHTML = 'No reviews yet!';
     container.appendChild(noReviews);
     return;
@@ -222,8 +228,8 @@ window.initMap = () => {
 /**
  * Add listener to detect change in favorite
  */
-window .addEventListener('load', function(){
-  document.getElementById("is_favorite").onchange=updateFavorite;
+window.addEventListener('load', function(){
+  document.getElementById("favCheckBox").onchange=updateFavorite;
   //document.getElementById("writeReview").onclick=writeReview;
   //document.getElementById("writeReview").onsubmit=writeReview;
   /*var frm = document.querySelector('form');
@@ -234,10 +240,44 @@ window .addEventListener('load', function(){
 
 
 function updateFavorite(event) {
-  fetch(`${DBHelper.DATABASE_URL}/${self.id}/?is_favorite=${this.checked}`)
-    .then(function(response){
-      console.log(response);
-    });
+  console.log(`attempting to update favorite to ${favCheckBox.checked}`);
+  fetch(`${DBHelper.DATABASE_URL}/${self.id}/?is_favorite=${favCheckBox.checked}`,{
+      method: 'put'}).then(function(response){console.log(response);});
+
+    const DB_NAME = 'restaurantDB';
+    const DB_VERSION = 3; // Use a long long for this value (don't use a float)
+    const DB_STORE_NAME = 'restaurants';
+
+    //if the databases is already open, don't reopen it
+    if(!req){
+      var db;
+      console.log(`Opening  ${DB_NAME} version ${DB_VERSION} object store ${DB_STORE_NAME} for update favorite...`);
+      var req = window.indexedDB.open(DB_NAME, DB_VERSION);
+
+      req.onsuccess = function (evt) {
+        db = req.result;
+        console.log(`${DB_NAME} version ${DB_VERSION} opened!`);
+        var store = db.transaction(DB_STORE_NAME, 'readwrite').objectStore(DB_STORE_NAME);
+
+        try{
+          var restReq = store.get(self.restaurant.id);
+          restReq.onsuccess = function(){
+            var data = restReq.result;
+            console.log(data);
+            data.is_favorite = `${favCheckBox.checked}`;
+            var updateRestReq = store.put(data);
+            console.log(data);
+          }
+        } catch(err){throw err;}
+        /*var rq = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME).getAll();
+        rq.onsuccess = function(reqSuccess){
+          callback(null,reviews);
+        }*/
+      };
+      req.onerror = function (evt) {
+        console.error(`Error opening ${DB_NAME}:`, evt.target.errorCode);
+      };
+    }
   }
 function writeReview(data) {
   //alert("Thank you for submitting your review!");
