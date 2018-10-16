@@ -1,5 +1,5 @@
 //Register Service Worker - copied from developer.google.com
-/*if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').then(function(registration) {
       // Registration was successful
@@ -10,7 +10,6 @@
     });
   });
 }else{console.log('No Service Worker found in navigator');}
-*/
 let restaurant, id;
 var map;
 
@@ -284,6 +283,28 @@ function writeReview(data) {
   var fd = new FormData(document.getElementById("writeReviewForm"));
   review = DBHelper.insertReview(self.restaurant.id,fd.get("name"),fd.get("rating"),
                 fd.get("comments"));
+/*
+  fetch(`http://localhost:1337/reviews/`,{
+      method: 'post',
+      headers: {
+             "Content-Type": "application/x-www-form-urlencoded",
+        },
+      body: {
+        "restaurant_id": self.restaurant.id,
+        "name": fd.get("name"),
+        "rating": fd.get("rating"),
+        "comments": fd.get("comments")
+      }
+    }).then(response => console.log(response.json()));
+    //.then(function(response){console.log(response);});
+
+              /*Parameters
+              {
+                  "restaurant_id": <restaurant_id>,
+                  "name": <reviewer_name>,
+                  "rating": <rating>,
+                  "comments": <comment_text>
+              }*/
   const ul = document.getElementById('reviews-list');
   ul.appendChild(createReviewHTML(review));
   document.getElementById("writeReviewForm").reset();

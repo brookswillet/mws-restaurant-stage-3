@@ -15,65 +15,64 @@ class DBHelper {
   /**
    * Fetch all restaurants.
    */
-  static fetchRestaurants(callback) {
+   static fetchRestaurants(callback) {
+     const DB_NAME = 'restaurantDB';
+     const DB_VERSION = 3; // Use a long long for this value (don't use a float)
+     const DB_STORE_NAME = 'restaurants';
 
-    const DB_NAME = 'restaurantDB';
-    const DB_VERSION = 1; // Use a long long for this value (don't use a float)
-    const DB_STORE_NAME = 'restaurants';
-
-    //if the databases is already open, don't reopen it
-    if(!req){
-      var db;
-      console.log(`Opening  ${DB_NAME} version ${DB_VERSION} store ${DB_STORE_NAME}...`);
-      var req = window.indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = function (event) {
-        db = req.result;
-        console.log(`${DB_NAME} version ${DB_VERSION} opened!`);
-        console.log(`Upgrading ${DB_NAME}`);
-        var objectStore = db.createObjectStore(DB_STORE_NAME,{keyPath:'id'});
-        console.log(`${DB_STORE_NAME} created`);
-        var nameIndex = objectStore.createIndex("by_name", "name", {unique: true});
-        var neighborhoodIndex = objectStore.createIndex("by_neighborhood", "neighborhood");
-        var cuisineIndex = objectStore.createIndex("by_cuisine", "cuisine_type");
-        objectStore.transaction.oncomplete = function(event){
-          fetch(DBHelper.DATABASE_URL).then(response => {
-            return response.json();
-            }).then(myJson => {
-                var tx = db.transaction(DB_STORE_NAME, 'readwrite');
-                var store = tx.objectStore('restaurants');
-                myJson.forEach(function(restaurant){
-                  store.put(restaurant);
-                });
-                const json = myJson;
-                const restaurants = myJson;
-                callback(null, restaurants);
-              }).catch(function(){
-                const error = (`Request failed.`);
-                callback(error, null);
-                });
-          }
-        };
-      req.onsuccess = function (evt) {
-        db = req.result;
-        console.log(`${DB_NAME} version ${DB_VERSION} opened!`);
-        var rq = db.transaction('restaurants').objectStore('restaurants').getAll();
-        rq.onsuccess = function(reqSuccess){
-          const restaurants = rq.result;
-          callback(null,restaurants);
-        }
-      };
-      req.onerror = function (evt) {
-        console.error(`Error opening ${DB_NAME}:`, evt.target.errorCode);
-      };
-    }
-  }
+     //if the databases is already open, don't reopen it
+     if(!req){
+       var db;
+       console.log(`Opening  ${DB_NAME} version ${DB_VERSION}...`);
+       var req = window.indexedDB.open(DB_NAME, DB_VERSION);
+       req.onupgradeneeded = function (event) {
+         db = req.result;
+         console.log(`${DB_NAME} version ${DB_VERSION} opened!`);
+         console.log(`Upgrading ${DB_NAME}`);
+         var objectStore = db.createObjectStore(DB_STORE_NAME,{keyPath:'id'});
+         console.log(`${DB_STORE_NAME} created`);
+         var nameIndex = objectStore.createIndex("by_name", "name", {unique: true});
+         var neighborhoodIndex = objectStore.createIndex("by_neighborhood", "neighborhood");
+         var cuisineIndex = objectStore.createIndex("by_cuisine", "cuisine_type");
+         objectStore.transaction.oncomplete = function(event){
+           fetch(DBHelper.DATABASE_URL).then(response => {
+             return response.json();
+             }).then(myJson => {
+                 var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                 var store = tx.objectStore('restaurants');
+                 myJson.forEach(function(restaurant){
+                   store.put(restaurant);
+                 });
+                 const json = myJson;
+                 const restaurants = myJson;
+                 callback(null, restaurants);
+               }).catch(function(){
+                 const error = (`Request failed.`);
+                 callback(error, null);
+                 });
+           }
+         };
+       req.onsuccess = function (evt) {
+         db = req.result;
+         console.log(`${DB_NAME} version ${DB_VERSION} opened!`);
+         var rq = db.transaction('restaurants').objectStore('restaurants').getAll();
+         rq.onsuccess = function(reqSuccess){
+           const restaurants = rq.result;
+           callback(null,restaurants);
+         }
+       };
+       req.onerror = function (evt) {
+         console.error(`Error opening ${DB_NAME}:`, evt.target.errorCode);
+       };
+     }
+   }
 
   /**
    * Fetch all reviews.
    */
   static fetchReviews(callback) {
     const RVW_DB_NAME = 'reviewsDB';
-    const RVW_VERSION = 1; // Use a long long for this value (don't use a float)
+    const RVW_VERSION = 3; // Use a long long for this value (don't use a float)
     const RVW_DB_STORE_NAME = 'reviews';
 
     //if the databases is already open, don't reopen it
@@ -86,12 +85,13 @@ class DBHelper {
         console.log(`${RVW_DB_NAME} version ${RVW_VERSION} opened!`);
         console.log(`Upgrading ${RVW_DB_NAME}`);
         var objectStore = db.createObjectStore(RVW_DB_STORE_NAME,{keyPath:'id', autoIncrement:true});
-        console.log(`${RVW_DB_STORE_NAME} created`);
+        console.log(`Object store ${RVW_DB_STORE_NAME} created`);
         var nameIndex = objectStore.createIndex("by_name", "name");
         var restaurantIndex = objectStore.createIndex("by_restaurant_id", "restaurant_id");
         objectStore.transaction.oncomplete = function(event){
-          fetch(`http://localhost:1337/reviews/`).then(response => {return response.json();})
-            .then(myJson => {
+          fetch(`http://localhost:1337/reviews/`).then(
+            response => {return response.json();}
+          ).then(myJson => {
                 var tx = db.transaction(RVW_DB_STORE_NAME, 'readwrite');
                 var store = tx.objectStore(RVW_DB_STORE_NAME);
                 myJson.forEach(function(review){
@@ -100,19 +100,21 @@ class DBHelper {
                 const json = myJson;
                 const reviews = myJson;
                 callback(null, reviews);
-              }).catch(function(){
+              }
+          ).catch(function(){
                 const error = (`Request failed.`);
                 callback(error, null);
-                });
+              });
           }
+
         };
       req.onsuccess = function (evt) {
         db = req.result;
         console.log(`${RVW_DB_NAME} version ${RVW_VERSION} opened!`);
         var rq = db.transaction(RVW_DB_STORE_NAME).objectStore(RVW_DB_STORE_NAME).getAll();
         rq.onsuccess = function(reqSuccess){
-          const restaurants = rq.result;
-          callback(null,restaurants);
+          const reviews = rq.result;
+          callback(null,reviews);
         }
       };
       req.onerror = function (evt) {
@@ -282,7 +284,7 @@ class DBHelper {
     var newRow = {restaurant_id:rst_id,name:nm,rating:rtg,comments:cmmnts,
                 createdAt:Date.now(),updatedAt:Date.now()};
     const DB_NAME = 'reviewsDB';
-    const DB_VERSION = 1; // Use a long long for this value (don't use a float)
+    const DB_VERSION = 3; // Use a long long for this value (don't use a float)
     const DB_STORE_NAME = 'reviews';
     var db;
     console.log(`Opening  ${DB_NAME} version ${DB_VERSION} store ${DB_STORE_NAME}...`);
@@ -299,7 +301,9 @@ class DBHelper {
     var putBody = {restaurant_id:rst_id,name:nm,rating:rtg,comments:cmmnts};
     fetch(`http://localhost:1337/reviews/`,{
         method: 'post',
-        body: putBody}).then(function(response){console.log(response);});
+        //body: putBody
+        body: JSON.stringify(putBody)
+      }).then(function(response){console.log(response.json());});
     return newRow;
     };
 }
